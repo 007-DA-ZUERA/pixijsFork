@@ -1,6 +1,6 @@
 /*!
  * PixiJS - v8.14.0
- * Compiled Sun, 19 Oct 2025 05:21:06 UTC
+ * Compiled Sun, 19 Oct 2025 05:36:54 UTC
  *
  * PixiJS is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -18965,8 +18965,10 @@ ${parts.join("\n")}
     var Triangle$1 = /*@__PURE__*/getDefaultExportFromCjs(triangleWasm);
 
     "use strict";
+    const import_meta = {};
     let triangleInstance = null;
     let triangleInitialized = false;
+    const wasmPath = new URL("../../gl/triangle.out.wasm", import_meta.url).href;
     function getTriangleInstance() {
       if (!triangleInitialized) {
         console.warn("Triangle-wasm not yet initialized. Call initTriangleWasm() during app startup.");
@@ -18975,7 +18977,7 @@ ${parts.join("\n")}
     }
     async function initTriangleWasm() {
       if (!triangleInstance) {
-        triangleInstance = await Triangle$1.init();
+        triangleInstance = await Triangle$1.init(wasmPath);
         triangleInitialized = true;
       }
       return triangleInstance;
