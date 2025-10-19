@@ -1,6 +1,6 @@
 /*!
  * PixiJS - v8.14.0
- * Compiled Sun, 19 Oct 2025 06:35:52 UTC
+ * Compiled Sun, 19 Oct 2025 07:04:38 UTC
  *
  * PixiJS is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -19003,30 +19003,14 @@ async function initTriangleWasm() {
 }
 
 "use strict";
-function triangulateWithHoles(points, holes, vertices, verticesStride, verticesOffset, indices, indicesOffset) {
+function triangulateWithHoles(points, _holes, vertices, verticesStride, verticesOffset, indices, indicesOffset) {
   const triangle = getTriangleInstance();
   if (!triangle) {
     console.error("Triangle-wasm not initialized");
     return;
   }
-  const numPoints = points.length / 2;
-  const segmentlist = [];
-  for (let i = 0; i < numPoints; i++) {
-    segmentlist.push(i, (i + 1) % numPoints);
-  }
-  const holelist = [];
-  if (holes && holes.length > 0) {
-    for (let i = 0; i < holes.length; i += 2) {
-      holelist.push(holes[i], holes[i + 1]);
-    }
-  }
   const input = triangle.makeIO({
-    pointlist: points,
-    numberofpoints: numPoints,
-    segmentlist,
-    numberofsegments: segmentlist.length / 2,
-    holelist,
-    numberofholes: holelist.length / 2
+    pointlist: points
   });
   const output = triangle.makeIO();
   try {
