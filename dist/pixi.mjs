@@ -1,6 +1,6 @@
 /*!
  * PixiJS - v8.14.0
- * Compiled Sun, 19 Oct 2025 07:36:48 UTC
+ * Compiled Sun, 19 Oct 2025 07:47:20 UTC
  *
  * PixiJS is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -19003,34 +19003,87 @@ async function initTriangleWasm() {
 }
 
 "use strict";
-function holeIndicesToHoleList(pointlist, holeIndices, nudgeIfOnBoundary = false, nudgeEpsilon = 1e-9) {
-  const out = [];
-  const nPoints = pointlist.length / 2;
-  for (const idx of holeIndices) {
-    if (!Number.isInteger(idx) || idx < 0 || idx >= nPoints) {
-      throw new RangeError(`hole index ${idx} out of bounds`);
-    }
-    let x = pointlist[idx * 2];
-    let y = pointlist[idx * 2 + 1];
-    if (nudgeIfOnBoundary) {
-      x = x + nudgeEpsilon * (idx % 2 === 0 ? 1 : -1);
-      y = y + nudgeEpsilon * (idx % 3 === 0 ? 1 : -1);
-    }
-    out.push(x, y);
+function pointInPolygon(x, y, ring) {
+  let inside = false;
+  const n = ring.length / 2;
+  for (let i = 0, j = n - 1; i < n; j = i++) {
+    const xi = ring[i * 2];
+    const yi = ring[i * 2 + 1];
+    const xj = ring[j * 2];
+    const yj = ring[j * 2 + 1];
+    const intersect = yi > y !== yj > y && x < (xj - xi) * (y - yi) / (yj - yi || 1e-30) + xi;
+    if (intersect)
+      inside = !inside;
   }
-  return out;
+  return inside;
+}
+function holeIndicesToHoleList(pointlist, holeIndices) {
+  const seeds = [];
+  const totalPoints = pointlist.length / 2;
+  const ringStarts = [...holeIndices];
+  for (let h = 0; h < ringStarts.length; h++) {
+    const start = ringStarts[h];
+    const end = h + 1 < ringStarts.length ? ringStarts[h + 1] - 1 : totalPoints - 1;
+    if (end <= start)
+      continue;
+    const ring = [];
+    for (let i = start; i <= end; i++) {
+      ring.push(pointlist[i * 2], pointlist[i * 2 + 1]);
+    }
+    let cx = 0;
+    let cy = 0;
+    for (let i = 0; i < ring.length; i += 2) {
+      cx += ring[i];
+      cy += ring[i + 1];
+    }
+    cx /= ring.length / 2;
+    cy /= ring.length / 2;
+    if (!pointInPolygon(cx, cy, ring)) {
+      const vx = ring[0] - cx;
+      const vy = ring[1] - cy;
+      const len = Math.hypot(vx, vy) || 1;
+      cx += vx / len * 1e-3;
+      cy += vy / len * 1e-3;
+      if (!pointInPolygon(cx, cy, ring)) {
+        cx = (ring[0] + ring[2]) * 0.5;
+        cy = (ring[1] + ring[3]) * 0.5;
+        cx += 1e-3;
+        cy += 1e-3;
+      }
+    }
+    seeds.push(cx, cy);
+  }
+  return seeds;
 }
 function triangulateWithHoles(points, holeIndices, vertices, verticesStride, verticesOffset, indices, indicesOffset) {
+  var _a;
   const triangle = getTriangleInstance();
   if (!triangle) {
     console.error("Triangle-wasm not initialized");
     return;
   }
-  const holelist = holeIndices.length > 0 ? holeIndicesToHoleList(points, holeIndices, true, 1e-6) : [];
+  const holelist = holeIndices.length > 0 ? holeIndicesToHoleList(points, holeIndices) : [];
   const numPoints = points.length / 2;
   const segmentlist = [];
-  for (let i = 0; i < numPoints; i++) {
-    segmentlist.push(i, (i + 1) % numPoints);
+  const ringStarts = holeIndices.length > 0 ? [0, ...holeIndices] : [0];
+  for (let r = 0; r < ringStarts.length; r++) {
+    const start = ringStarts[r];
+    let end = r + 1 < ringStarts.length ? ringStarts[r + 1] - 1 : numPoints - 1;
+    if (end > start) {
+      const sx = points[start * 2];
+      const sy = points[start * 2 + 1];
+      const ex = points[end * 2];
+      const ey = points[end * 2 + 1];
+      if (sx === ex && sy === ey)
+        end -= 1;
+    }
+    const ringCount = end - start + 1;
+    if (ringCount <= 1)
+      continue;
+    for (let i = start; i < end; i++) {
+      segmentlist.push(i, i + 1);
+    }
+    segmentlist.push(end, start);
   }
   const input = triangle.makeIO({
     pointlist: points,
@@ -19039,9 +19092,16 @@ function triangulateWithHoles(points, holeIndices, vertices, verticesStride, ver
   });
   const output = triangle.makeIO();
   try {
-    triangle.triangulate({ psql: false, quality: true }, input, output);
+    triangle.triangulate({ quality: true }, input, output);
+    console.log("Triangle output:", {
+      numTriangles: output.numberoftriangles,
+      numCorners: output.numberofcorners,
+      hasTrianglelist: !!output.trianglelist,
+      trianglelistLength: (_a = output.trianglelist) == null ? void 0 : _a.length
+    });
     if (!output.trianglelist || output.trianglelist.length === 0) {
-      console.log("Oh shit");
+      console.error("Triangle failed to generate triangles!");
+      console.error("Input was:", { numPoints, numSegments: segmentlist.length / 2, numHoles: holelist.length / 2 });
       return;
     }
     console.log("triangulating :D");
