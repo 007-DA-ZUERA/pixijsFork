@@ -1,6 +1,6 @@
 /*!
  * PixiJS - v8.14.0
- * Compiled Sun, 19 Oct 2025 07:13:13 UTC
+ * Compiled Sun, 19 Oct 2025 07:24:02 UTC
  *
  * PixiJS is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -20988,10 +20988,12 @@ function triangulateWithHoles(points, holeIndices, vertices, verticesStride, ver
   });
   const output = triangle.makeIO();
   try {
-    triangle.triangulate({ quality: true }, input, output);
+    triangle.triangulate({ pslg: false, quality: true }, input, output);
     if (!output.trianglelist || output.trianglelist.length === 0) {
+      console.log("Oh shit");
       return;
     }
+    console.log("triangulating :D");
     for (let i = 0; i < output.trianglelist.length; i += 3) {
       indices[indicesOffset++] = output.trianglelist[i] + verticesOffset;
       indices[indicesOffset++] = output.trianglelist[i + 1] + verticesOffset;
