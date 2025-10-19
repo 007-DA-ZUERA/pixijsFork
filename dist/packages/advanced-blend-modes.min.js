@@ -1,6 +1,6 @@
 /*!
  * PixiJS - v8.14.0
- * Compiled Sun, 19 Oct 2025 06:34:18 UTC
+ * Compiled Sun, 19 Oct 2025 06:35:52 UTC
  *
  * PixiJS is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
