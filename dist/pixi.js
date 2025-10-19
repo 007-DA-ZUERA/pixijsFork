@@ -1,6 +1,6 @@
 /*!
  * PixiJS - v8.14.0
- * Compiled Sun, 19 Oct 2025 06:16:25 UTC
+ * Compiled Sun, 19 Oct 2025 06:22:25 UTC
  *
  * PixiJS is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -19010,42 +19010,44 @@ ${parts.join("\n")}
         return;
       }
       const numPoints = points.length / 2;
-      const pointIndices = [];
+      const segmentlist = [];
       for (let i = 0; i < numPoints; i++) {
-        pointIndices.push(i);
+        segmentlist.push(i, (i + 1) % numPoints);
       }
-      const input = {
-        pointlist: points,
-        numberofpoints: numPoints,
-        segmentlist: [],
-        numberofsegments: 0,
-        holelist: [],
-        numberofholes: 0
-      };
-      for (let i = 0; i < numPoints; i++) {
-        input.segmentlist.push(i, (i + 1) % numPoints);
-      }
-      input.numberofsegments = numPoints;
+      const holelist = [];
       if (holes && holes.length > 0) {
         for (let i = 0; i < holes.length; i += 2) {
-          input.holelist.push(holes[i], holes[i + 1]);
+          holelist.push(holes[i], holes[i + 1]);
         }
-        input.numberofholes = holes.length / 2;
       }
-      const output = triangle.triangulate(input, "pzQ");
-      if (!output || !output.trianglelist) {
-        return;
-      }
-      for (let i = 0; i < output.trianglelist.length; i += 3) {
-        indices[indicesOffset++] = output.trianglelist[i] + verticesOffset;
-        indices[indicesOffset++] = output.trianglelist[i + 1] + verticesOffset;
-        indices[indicesOffset++] = output.trianglelist[i + 2] + verticesOffset;
-      }
-      let index = verticesOffset * verticesStride;
-      for (let i = 0; i < points.length; i += 2) {
-        vertices[index] = points[i];
-        vertices[index + 1] = points[i + 1];
-        index += verticesStride;
+      const input = triangle.makeIO({
+        pointlist: points,
+        numberofpoints: numPoints,
+        segmentlist,
+        numberofsegments: segmentlist.length / 2,
+        holelist,
+        numberofholes: holelist.length / 2
+      });
+      const output = triangle.makeIO();
+      try {
+        triangle.triangulate("pzQ", input, output);
+        if (!output.trianglelist || output.trianglelist.length === 0) {
+          return;
+        }
+        for (let i = 0; i < output.trianglelist.length; i += 3) {
+          indices[indicesOffset++] = output.trianglelist[i] + verticesOffset;
+          indices[indicesOffset++] = output.trianglelist[i + 1] + verticesOffset;
+          indices[indicesOffset++] = output.trianglelist[i + 2] + verticesOffset;
+        }
+        let index = verticesOffset * verticesStride;
+        for (let i = 0; i < points.length; i += 2) {
+          vertices[index] = points[i];
+          vertices[index + 1] = points[i + 1];
+          index += verticesStride;
+        }
+      } finally {
+        triangle.freeIO(input);
+        triangle.freeIO(output);
       }
     }
 
