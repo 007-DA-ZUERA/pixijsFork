@@ -1,6 +1,6 @@
 /*!
  * PixiJS - v8.14.0
- * Compiled Sun, 19 Oct 2025 06:22:25 UTC
+ * Compiled Sun, 19 Oct 2025 06:34:18 UTC
  *
  * PixiJS is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -20985,7 +20985,7 @@ ${parts.join("\n")}
       });
       const output = triangle.makeIO();
       try {
-        triangle.triangulate("pzQ", input, output);
+        triangle.triangulate({ quality: true }, input, output);
         if (!output.trianglelist || output.trianglelist.length === 0) {
           return;
         }
