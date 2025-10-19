@@ -1,0 +1,33 @@
+{
+  "name": "pixi.js",
+  "version": "8.14.0-triangle-wasm",
+  "description": "PixiJS with triangle-wasm integration for improved triangulation",
+  "author": "PixiJS Team (modified)",
+  "homepage": "https://github.com/007-DA-ZUERA/pixijsFork",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/007-DA-ZUERA/pixijsFork.git"
+  },
+  "main": "lib/index.js",
+  "module": "lib/index.mjs",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "dist"
+  ],
+  "dependencies": {
+    "@pixi/colord": "^2.9.6",
+    "@types/css-font-loading-module": "^0.0.12",
+    "@types/earcut": "^3.0.0",
+    "@webgpu/types": "^0.1.40",
+    "@xmldom/xmldom": "^0.8.10",
+    "earcut": "^3.0.2",
+    "eventemitter3": "^5.0.1",
+    "gifuct-js": "^2.1.2",
+    "ismobilejs": "^1.1.1",
+    "parse-svg-path": "^0.1.2",
+    "tiny-lru": "^11.4.5",
+    "triangle-wasm": "^1.0.0"
+  }
+}
