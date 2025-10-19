@@ -1,6 +1,6 @@
 /*!
  * PixiJS - v8.14.0
- * Compiled Sun, 19 Oct 2025 07:24:02 UTC
+ * Compiled Sun, 19 Oct 2025 07:29:38 UTC
  *
  * PixiJS is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -20982,13 +20982,19 @@ ${parts.join("\n")}
         return;
       }
       const holelist = holeIndices.length > 0 ? holeIndicesToHoleList(points, holeIndices, true, 1e-6) : [];
+      const numPoints = points.length / 2;
+      const segmentlist = [];
+      for (let i = 0; i < numPoints; i++) {
+        segmentlist.push(i, (i + 1) % numPoints);
+      }
       const input = triangle.makeIO({
         pointlist: points,
+        segmentlist,
         holelist
       });
       const output = triangle.makeIO();
       try {
-        triangle.triangulate({ pslg: false, quality: true }, input, output);
+        triangle.triangulate({ quality: true }, input, output);
         if (!output.trianglelist || output.trianglelist.length === 0) {
           console.log("Oh shit");
           return;
