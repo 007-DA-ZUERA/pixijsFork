@@ -1,6 +1,6 @@
 /*!
  * PixiJS - v8.14.0
- * Compiled Sun, 19 Oct 2025 07:04:38 UTC
+ * Compiled Sun, 19 Oct 2025 07:13:13 UTC
  *
  * PixiJS is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -19003,14 +19003,33 @@ async function initTriangleWasm() {
 }
 
 "use strict";
-function triangulateWithHoles(points, _holes, vertices, verticesStride, verticesOffset, indices, indicesOffset) {
+function holeIndicesToHoleList(pointlist, holeIndices, nudgeIfOnBoundary = false, nudgeEpsilon = 1e-9) {
+  const out = [];
+  const nPoints = pointlist.length / 2;
+  for (const idx of holeIndices) {
+    if (!Number.isInteger(idx) || idx < 0 || idx >= nPoints) {
+      throw new RangeError(`hole index ${idx} out of bounds`);
+    }
+    let x = pointlist[idx * 2];
+    let y = pointlist[idx * 2 + 1];
+    if (nudgeIfOnBoundary) {
+      x = x + nudgeEpsilon * (idx % 2 === 0 ? 1 : -1);
+      y = y + nudgeEpsilon * (idx % 3 === 0 ? 1 : -1);
+    }
+    out.push(x, y);
+  }
+  return out;
+}
+function triangulateWithHoles(points, holeIndices, vertices, verticesStride, verticesOffset, indices, indicesOffset) {
   const triangle = getTriangleInstance();
   if (!triangle) {
     console.error("Triangle-wasm not initialized");
     return;
   }
+  const holelist = holeIndices.length > 0 ? holeIndicesToHoleList(points, holeIndices, true, 1e-6) : [];
   const input = triangle.makeIO({
-    pointlist: points
+    pointlist: points,
+    holelist
   });
   const output = triangle.makeIO();
   try {
